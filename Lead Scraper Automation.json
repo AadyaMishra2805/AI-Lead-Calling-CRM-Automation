@@ -1,0 +1,629 @@
+{
+  "name": "Lead Scraper Automation",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -352
+      ],
+      "id": "54d25ffc-08ad-4c2d-be23-b4a5ada8b4a4",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1Qrn_se5oBUm0i5J2DajyFrvemzbySdMuq-zdL8BVGi0",
+          "mode": "list",
+          "cachedResultName": "NPenviromental Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Qrn_se5oBUm0i5J2DajyFrvemzbySdMuq-zdL8BVGi0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Qrn_se5oBUm0i5J2DajyFrvemzbySdMuq-zdL8BVGi0/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        224,
+        -352
+      ],
+      "id": "ea9884b4-02fb-471c-98e0-e97c0b4b11d6",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gFByFGfDhnrfZ8bO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=Write a short personalized cold outreach message for this business.\n\nBusiness Name: {{$json[\"name\"]}}\n\nRating: {{$json[\"rating\"]}}\n\nWebsite: {{$json[\"website\"]}}\n\nKeep it professional and friendly.\n"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        -352
+      ],
+      "id": "daf2176a-b1aa-434d-a653-0135e22ac2d6",
+      "name": "Message a model",
+      "credentials": {
+        "openAiApi": {
+          "id": "BbRxyOFkCAOpGAHb",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.vapi.ai/call",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 51620906-07dd-428e-a5ec-b1c02509fdde"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"assistantId\": \"3dee1df0-1394-4803-aad5-a0cf550a44fd\",\n  \"phoneNumberId\": \"f507a187-bf1f-45c6-8144-a4138490f2c5\",\n  \"customer\": {\n    \"number\": \"+91{{$node[\"Get row(s) in sheet\"].json[\"phone\"]}}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        800,
+        -352
+      ],
+      "id": "14f5b9f5-c8cd-48ad-9109-d35c432ffb31",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "unit": "minutes"
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1024,
+        -352
+      ],
+      "id": "44356500-e855-45c6-87be-516fe27cab6e",
+      "name": "Wait1",
+      "webhookId": "548699df-cb8f-4a36-84ab-ff385d698a37"
+    },
+    {
+      "parameters": {
+        "url": "https://api.vapi.ai/call",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "1"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer 51620906-07dd-428e-a5ec-b1c02509fdde"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1248,
+        -352
+      ],
+      "id": "279bc7ab-f38e-4e26-aafb-9a33e8fde363",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4.1-MINI"
+        },
+        "responses": {
+          "values": [
+            {
+              "content": "=You are analyzing a sales call transcript.\n\nTranscript:\n{{ $json.transcript }}\n\nRules:\n- If the user shows ANY positive interest at any point in the conversation, return INTERESTED.\n- Even if the user later says \"No\" to scheduling or hearing more details, still return INTERESTED if they earlier expressed interest.\n- Return NOT_INTERESTED only if the user clearly rejects the service itself.\n- Return NO_RESPONSE only if nobody answered or transcript is empty.\n\nReply with ONLY one word:\nINTERESTED\nNOT_INTERESTED\nNO_RESPONSE"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2.3,
+      "position": [
+        1472,
+        -352
+      ],
+      "id": "f6996c29-203f-408d-a60c-a0796607ee61",
+      "name": "Message a model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "BbRxyOFkCAOpGAHb",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b3860ae8-2e62-4ea2-8b98-63ceb5848f87",
+              "leftValue": "={{$json.output[0].content[0].text}}",
+              "rightValue": "INTERESTED",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1824,
+        -352
+      ],
+      "id": "90b8f5d2-c782-454a-bc24-1655eea1a130",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "2a43ea29-4d72-4c42-805c-b7daa04fb87d",
+              "leftValue": "={{$json.output[0].content[0].text}}",
+              "rightValue": "NO_RESPONSE",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2048,
+        -256
+      ],
+      "id": "057e3d23-db01-49b4-9823-b39d26d583ad",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$node[\"Get row(s) in sheet\"].json[\"gmail\"]}}",
+        "subject": "Sorry we missed you",
+        "message": "Hi,  We recently tried reaching out regarding AI automation solutions that can help streamline business operations and improve efficiency.  Since we missed connecting with you, we wanted to follow up by email instead.  If you'd be interested in learning more about how DIFMO can support your business with AI-powered automation services, simply reply to this email and we’d be happy to connect.  Best regards, DIFMO Services",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2272,
+        -352
+      ],
+      "id": "1254519e-04c4-48bf-a347-0290fca72008",
+      "name": "Send a message",
+      "webhookId": "2892a871-f1c3-4a7a-a115-317bb4ad06b4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4TqShp75mZKZShgQ",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$node[\"Get row(s) in sheet\"].json[\"gmail\"]}}",
+        "subject": "Thank You for your valuable time!!",
+        "message": "Hi,  Thank you for taking the time to speak with us.  We completely understand that this may not be the right fit at the moment. If your business ever explores AI automation solutions in the future, we’d be happy to help.  Wishing you continued success ahead.  Best regards, DIFMO Services",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2272,
+        -160
+      ],
+      "id": "10fc8f57-2adf-438c-b239-9d77965a0267",
+      "name": "Send a message1",
+      "webhookId": "6da5553c-c6bd-4c23-82ac-e40ca9619caf",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4TqShp75mZKZShgQ",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$node[\"Get row(s) in sheet\"].json[\"gmail\"]}}",
+        "subject": "Thank you for your interest in DIFMO AI Automation Services",
+        "message": "Hi,  Thank you for showing interest in DIFMO’s AI automation solutions.  At DIFMO, we help businesses streamline repetitive operations, improve customer engagement, and increase efficiency using modern AI-powered systems.  Our services include:  • AI Calling & Lead Follow-up Automation • Customer Support Automation • Workflow Automation using AI & n8n • Email & CRM Automation • AI Chatbots and Voice Assistants • Business Process Optimization  You can explore more about our services here: https://www.difmo.com/  We’d love to understand your business requirements and discuss how AI automation can support your growth.  Simply reply to this email, and our team will get in touch with you shortly.  Best regards, DIFMO Services https://www.difmo.com/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2496,
+        -544
+      ],
+      "id": "6e93073c-ab41-4646-a405-ae98f4813112",
+      "name": "Send a message2",
+      "webhookId": "1d50b093-e82e-4573-8d87-1a37d1048b61",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "4TqShp75mZKZShgQ",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1Qrn_se5oBUm0i5J2DajyFrvemzbySdMuq-zdL8BVGi0",
+          "mode": "list",
+          "cachedResultName": "NPenviromental Leads",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Qrn_se5oBUm0i5J2DajyFrvemzbySdMuq-zdL8BVGi0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Qrn_se5oBUm0i5J2DajyFrvemzbySdMuq-zdL8BVGi0/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "Interested",
+            "phone": "={{ $('Get row(s) in sheet').item.json.phone }}"
+          },
+          "matchingColumns": [
+            "phone"
+          ],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "rating",
+              "displayName": "rating",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "address",
+              "displayName": "address",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "website",
+              "displayName": "website",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "gmail",
+              "displayName": "gmail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2272,
+        -544
+      ],
+      "id": "4b028802-7d9a-446a-a7e1-7748b0f187c8",
+      "name": "Update row in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "gFByFGfDhnrfZ8bO",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "lead",
+        "operation": "upsert",
+        "Company": "={{ $('Get row(s) in sheet').item.json.name }}",
+        "lastName": "={{ $('Get row(s) in sheet').item.json.name }}",
+        "additionalFields": {
+          "Description": "={{ $('Message a model1').item.json.output[0].content[0].text }}",
+          "Email": "={{ $('Get row(s) in sheet').item.json.gmail }}",
+          "Phone": "={{ '+91' + $('Get row(s) in sheet').item.json.phone }}"
+        }
+      },
+      "type": "n8n-nodes-base.zohoCrm",
+      "typeVersion": 1,
+      "position": [
+        2048,
+        -544
+      ],
+      "id": "1ee6804b-4ec8-4ee5-b01c-e54adb77d846",
+      "name": "Create or update a lead",
+      "credentials": {
+        "zohoOAuth2Api": {
+          "id": "pgCjfnkvF0VPtVca",
+          "name": "Zoho OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Create or update a lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create or update a lead": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "18522dda-ec19-48be-8de0-334ec90b59a1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "240195e8348dd66897cfecd35072af7e8a916b2eab54ce303e2fc6bb2b740316"
+  },
+  "id": "ElKPt557V6W1biFS",
+  "tags": []
+}
