@@ -1,4 +1,3 @@
-# AI-Lead-Calling-CRM-Automation
 # AI Lead Calling & CRM Automation System
 
 An AI-powered outbound lead qualification workflow built using n8n, OpenAI, Vapi AI, Zoho CRM, and Google Sheets.
